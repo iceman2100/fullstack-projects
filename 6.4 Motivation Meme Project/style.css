@@ -1,0 +1,27 @@
+html{
+    background-color: black;
+    margin: 0%;
+
+    
+}
+h1{
+    text-transform: uppercase;
+    font-size: 3rem;
+}
+#brad{
+    color: white;
+    font-family: Libre Baskerville, serif;
+    text-align: center;
+    text-transform: capitalize;
+     margin-top: 100px;
+   margin :25%; 
+   padding: 10px;
+}
+
+#cap{
+   text-transform: uppercase;
+}
+#im{
+    
+    border: 5px solid white;
+}

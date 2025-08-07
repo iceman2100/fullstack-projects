@@ -1,0 +1,28 @@
+*{
+    background-color: #f0f0f0;
+    ;
+}
+
+#red{
+    color: red;
+}
+#blue{
+    color: blue;
+}
+#orange{
+    color:#C04000;
+}
+#green{
+    color: green;
+}
+#yellow{
+    color: yellow;
+}
+.color-title {
+   font-weight: normal;
+}
+
+img{
+    height: 200px;
+    width: 200px;
+}

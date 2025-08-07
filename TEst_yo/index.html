@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monad • Luxe Hero</title>
+
+<!-----------  BASIC STYLES  ----------->
+<style>
+ :root{
+   --bg0:#ececf3; --bg1:#f7f8fd;    /* floor gradient */
+   --headline:#081834;               /* dark navy text  */
+   --text:#5a6480;
+   --accent:#ff95e3;                 /* rim-light pink  */
+ }
+ *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+ body{
+   background:linear-gradient(150deg,var(--bg0) 0%,var(--bg1) 55%);
+   color:var(--headline);overflow-x:hidden
+ }
+ /* dust specks */
+ body::before{
+   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+   background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=');
+   opacity:.14;mix-blend-mode:darken
+ }
+
+ /* — hero frame — */
+ #hero{position:relative;height:100vh;overflow:hidden}
+ #hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
+
+ /* overlay text */
+ .overlay{position:relative;z-index:5;height:100%;
+          display:flex;flex-direction:column;justify-content:center;
+          padding-left:6vw;max-width:620px}
+ h1{font-size:clamp(2.6rem,5vw,4.8rem);font-weight:700;line-height:1.05}
+ p {margin-top:1rem;font-size:1.1rem;max-width:34ch;color:var(--text)}
+
+ /* progress */
+ #barWrap{position:absolute;bottom:28px;left:0;width:100%;padding:0 6vw;z-index:6}
+ #bar{height:6px;border-radius:8px;background:var(--accent);width:0}
+</style>
+
+<!-----------  CDN LIBS  ----------->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.5/gsap.min.js"></script>
+</head>
+<body>
+
+<section id="hero">
+  <canvas id="heroCanvas"></canvas>
+
+  <div class="overlay">
+    <h1 class="fade">The Smarter,<br>AI-Powered<br>Decentralized<br>Marketplace</h1>
+    <p class="fade">Harness the power of decentralized AI marketplace with Monad.</p>
+  </div>
+
+  <div id="barWrap"><div id="bar"></div></div>
+</section>
+
+<!-----------  HERO SCRIPT  ----------->
+<script>
+const canvas   = document.getElementById('heroCanvas');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setClearColor(0x000000,0);                          // transparent – let CSS bg show
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,100);
+camera.position.set(0,1.6,11);
+camera.lookAt(0,0,0);
+
+/*  LIGHTS  */
+scene.add(new THREE.HemisphereLight(0xffffff,0xd3d6e3,0.9));
+const rim = new THREE.DirectionalLight(0xff9bf7,1.1); rim.position.set(-5,5,7); scene.add(rim);
+const key = new THREE.DirectionalLight(0xffffff,0.65); key.position.set(4,6,4); scene.add(key);
+
+/*  FLOOR “TILES”  */
+const floor = new THREE.GridHelper(80,40,0xdddddd,0xdddddd);
+floor.rotation.x = Math.PI/2;      // lie flat (XZ lines)
+floor.material.opacity = .15;
+floor.material.transparent = true;
+scene.add(floor);
+
+/*  MATERIALS  */
+const glossyWhite = new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.35,metalness:.05,clearcoat:.5});
+const glowPink    = new THREE.MeshStandardMaterial({color:0xffa2ff,emissive:0xff5dff,emissiveIntensity:1.3,
+                                                    roughness:.4,metalness:.1,transparent:true,opacity:.85});
+const goldMat     = new THREE.MeshStandardMaterial({color:0xf7c35a,roughness:.25,metalness:.8});
+
+/*  RING-TRACK  (Torus)  */
+const ring   = new THREE.Mesh(new THREE.TorusGeometry(4,0.4,32,140),glossyWhite);
+ring.rotation.x = -Math.PI/2;      // flat on floor
+scene.add(ring);
+
+/*  BEAM / PLATE  */
+const beamGeo = new THREE.BoxGeometry(9,0.9,1.4,1,1,1);
+const beam    = new THREE.Mesh(beamGeo,glowPink);
+beam.position.set(0,0.45,0);
+beam.rotation.x = -Math.PI/4;
+scene.add(beam);
+
+/*  COIN  */
+const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.2,64),goldMat);
+coin.rotation.x = Math.PI/2;
+scene.add(coin);
+
+/*  COIN ORBIT PATH (simple circle)  */
+const orbitRadius = 4;
+function positionCoin(angle){
+  coin.position.set(Math.cos(angle)*orbitRadius,
+                    0.41,
+                    Math.sin(angle)*orbitRadius);
+  coin.rotation.z += 0.25;          // spin itself
+}
+
+/*  RESIZE  */
+function onResize(){
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+}
+onResize(); addEventListener('resize',onResize);
+
+/*  MAIN TIMELINE  */
+const tl = gsap.timeline({defaults:{ease:'power2.out'},onUpdate:()=>document.getElementById('bar').style.width=(tl.progress()*100)+'%'});
+
+/* text fade */
+tl.from('.fade',{opacity:0,y:60,stagger:0.25,duration:1.2});
+
+/* beam slide + slight rotate */
+tl.from(beam.position,{y:-5,duration:2},'<0.2')
+  .from(beam.rotation,{z:-1.3,duration:2},'<')
+  ;
+
+/* ring scale-up (subtle) */
+tl.from(ring.scale,{y:0.01,duration:1.6},'<0.4');
+
+/* coin orbit once around */
+tl.fromTo({a:0},{a:Math.PI*2,duration:5,ease:'power1.inOut',
+  onUpdate:function(){positionCoin(this.targets()[0].a);}
+},0.6);
+
+/* keep coin orbiting slowly after timeline end */
+tl.call(()=>{
+  gsap.to({},{
+    repeat:-1,duration:8,ease:'linear',
+    onUpdate:function(){
+      positionCoin((Date.now()/1000)*0.8);     // continuous orbit
+    }
+  });
+});
+
+/*  RENDER LOOP  */
+gsap.ticker.add(()=>renderer.render(scene,camera));
+</script>
+
+</body>
+</html>
